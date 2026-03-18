@@ -1,0 +1,12 @@
+# Environment
+.env
+venv/
+__pycache__/
+*.pyc
+
+# Data files
+interview_history.json
+
+# IDE
+.vscode/
+.idea/
