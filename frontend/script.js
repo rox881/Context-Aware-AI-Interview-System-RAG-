@@ -20,6 +20,12 @@
     const charCounter       = document.getElementById("char-counter");
     const chatArea          = document.getElementById("chat-area");
 
+    // ── Configuration ────────────────────────────────────────────────────
+
+    // Backend API base URL — ensures requests always reach FastAPI (port 8000)
+    // even when the HTML is opened via Live Server (port 5500) or file://.
+    const API_BASE = "http://localhost:8000";
+
     // ── State ────────────────────────────────────────────────────────────
 
     let sessionId       = null;
@@ -152,7 +158,7 @@
         setLoading(true);
 
         try {
-            const res = await fetch("/start", { method: "POST" });
+            const res = await fetch(API_BASE + "/start", { method: "POST" });
             if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
             const data = await res.json();
@@ -180,7 +186,7 @@
         setLoading(true);
 
         try {
-            const res = await fetch("/answer", {
+            const res = await fetch(API_BASE + "/answer", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ session_id: sessionId, answer }),

@@ -1,0 +1,5 @@
+enviroment to be activated is here to be the 
+age-gender there 
+also here is the 
+uvicorn backend.main:app --reload --port 8000
+this comand is used to run the application

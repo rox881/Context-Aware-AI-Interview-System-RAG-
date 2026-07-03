@@ -8,7 +8,6 @@ from typing import Dict
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
@@ -180,9 +179,17 @@ async def submit_answer(req: AnswerRequest):
 
 # ── Serve Frontend ────────────────────────────────────────────────────────────
 
-app.mount("/static", StaticFiles(directory="frontend"), name="static")
-
 
 @app.get("/")
 async def serve_frontend():
     return FileResponse("frontend/index.html")
+
+
+@app.get("/style.css")
+async def serve_css():
+    return FileResponse("frontend/style.css", media_type="text/css")
+
+
+@app.get("/script.js")
+async def serve_js():
+    return FileResponse("frontend/script.js", media_type="application/javascript")
