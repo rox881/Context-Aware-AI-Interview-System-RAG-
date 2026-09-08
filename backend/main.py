@@ -3,6 +3,10 @@ FastAPI Main Application
 Serves the AI Interview Web App — API endpoints + static frontend.
 """
 
+import json
+import logging
+import re
+from pathlib import Path
 import uuid
 from typing import Dict
 
@@ -11,9 +15,44 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from backend.memory import ConversationStorage, InterviewMemory
-from backend.analyzer import SemanticAnalyzer
-from backend.llm_chain import followup_chain, evaluation_chain
+try:
+    from backend.memory import ConversationStorage, InterviewMemory
+    from backend.analyzer import SemanticAnalyzer
+    from backend.llm_chain import followup_chain, evaluation_chain
+except ModuleNotFoundError:
+    from memory import ConversationStorage, InterviewMemory
+    from analyzer import SemanticAnalyzer
+    from llm_chain import followup_chain, evaluation_chain
+
+
+BASE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = BASE_DIR.parent
+FRONTEND_DIR = PROJECT_ROOT / "frontend"
+logger = logging.getLogger(__name__)
+
+
+def _parse_evaluation_result(raw_result):
+    """Normalize the evaluation chain output into a dictionary."""
+    if isinstance(raw_result, dict):
+        return raw_result
+
+    if raw_result is None:
+        raise ValueError("Empty evaluation response")
+
+    text = str(raw_result).strip()
+    if text.startswith("```"):
+        text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE).strip()
+        text = re.sub(r"\s*```$", "", text).strip()
+
+    json_match = re.search(r"\{.*\}", text, flags=re.DOTALL)
+    if json_match:
+        text = json_match.group(0)
+
+    parsed = json.loads(text)
+    if not isinstance(parsed, dict):
+        raise ValueError("Evaluation response is not a JSON object")
+
+    return parsed
 
 # ── App Setup ─────────────────────────────────────────────────────────────────
 
@@ -111,12 +150,14 @@ async def submit_answer(req: AnswerRequest):
 
         # 4. Evaluate answer
         try:
-            eval_result = evaluation_chain.invoke({
+            raw_eval_result = evaluation_chain.invoke({
                 "question": session.current_question,
                 "answer": answer,
                 "context": full_context,
             })
+            eval_result = _parse_evaluation_result(raw_eval_result)
         except Exception:
+            logger.exception("Evaluation pipeline failed for session %s", req.session_id)
             eval_result = {
                 "relevance": 5,
                 "clarity": 5,
@@ -182,14 +223,14 @@ async def submit_answer(req: AnswerRequest):
 
 @app.get("/")
 async def serve_frontend():
-    return FileResponse("frontend/index.html")
+    return FileResponse(FRONTEND_DIR / "index.html")
 
 
 @app.get("/style.css")
 async def serve_css():
-    return FileResponse("frontend/style.css", media_type="text/css")
+    return FileResponse(FRONTEND_DIR / "style.css", media_type="text/css")
 
 
 @app.get("/script.js")
 async def serve_js():
-    return FileResponse("frontend/script.js", media_type="application/javascript")
+    return FileResponse(FRONTEND_DIR / "script.js", media_type="application/javascript")

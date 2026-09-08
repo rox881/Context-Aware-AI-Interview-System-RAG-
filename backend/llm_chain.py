@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
+from langchain_core.output_parsers import StrOutputParser
 from sentence_transformers import SentenceTransformer
 
 # Load .env file if present
@@ -25,7 +25,7 @@ if not GROQ_API_KEY:
     )
 
 llm = ChatGroq(
-    model="llama-3.1-8b-instant",
+    model="openai/gpt-oss-120b",
     temperature=0.3,
     max_tokens=512,
     api_key=GROQ_API_KEY,
@@ -74,4 +74,4 @@ Output JSON:
 # ── Chains ────────────────────────────────────────────────────────────────────
 
 followup_chain = followup_prompt | llm | StrOutputParser()
-evaluation_chain = evaluation_prompt | llm | JsonOutputParser()
+evaluation_chain = evaluation_prompt | llm | StrOutputParser()
