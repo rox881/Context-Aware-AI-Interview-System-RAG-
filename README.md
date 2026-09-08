@@ -1,7 +1,7 @@
 # Context-Aware AI Interview System
 
 ## Overview
-This project is a full-stack AI interview app that asks follow-up questions, evaluates answers, and keeps conversational memory across an interview session.
+This project is a Small Scale AI interview app that asks follow-up questions, evaluates answers, and keeps conversational memory across an interview session.
 
 ## Core Features
 - Context-aware follow-up questions using prior Q&A.
